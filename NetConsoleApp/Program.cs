@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.WebSockets;
 
 /// <summary>
 ///    http://brain-sharper.blogspot.com/2012/03/httplistener.html
@@ -33,7 +34,7 @@ namespace NetConsoleApp
             {
                 var context = await Listener.GetContextAsync();
                 Console.WriteLine("Client connected");
-                Task.Factory.StartNew(() => ProcessRequest(context));
+                await Task.Factory.StartNew(() => ProcessRequest(context));
             }
 
             Listener.Close();
@@ -43,13 +44,18 @@ namespace NetConsoleApp
         {
             Console.WriteLine("Thread no {0}", Environment.CurrentManagedThreadId);
             HttpListenerRequest request = context.Request;
-            Console.WriteLine("Request: {0}, url: {1}", request.HttpMethod, request.Url.AbsolutePath);
+            string path = System.Net.WebUtility.UrlDecode(request.RawUrl);
+            Console.WriteLine("Request: {0}, url: {1}", request.HttpMethod, path);
             System.Threading.Thread.Sleep(1000);
             HttpListenerResponse response = context.Response;
             
             using (Stream stream = response.OutputStream) {
                     response.StatusCode = (int)HttpStatusCode.OK;
-                    string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+                response.AddHeader(HttpResponseHeader.ContentType.ToString(), "Content-Type: text/html; charset=utf-8");
+                string responseString = "<HTML><BODY>";
+                responseString += "Test <br />";
+                responseString += path;
+                responseString += "</BODY></HTML>";
                     byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                     // Get a response stream and write the response to it.
                     response.ContentLength64 = buffer.Length;
@@ -60,6 +66,8 @@ namespace NetConsoleApp
             }
             Console.WriteLine("Response");
         }
+
+       
 
     }
 
