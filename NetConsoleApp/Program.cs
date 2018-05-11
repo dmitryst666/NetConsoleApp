@@ -41,6 +41,7 @@ namespace NetConsoleApp
 
         private static void ProcessRequest(HttpListenerContext context)
         {
+            Console.WriteLine("Thread no {0}", Environment.CurrentManagedThreadId);
             HttpListenerRequest request = context.Request;
             Console.WriteLine("Request: {0}, url: {1}", request.HttpMethod, request.Url.AbsolutePath);
             System.Threading.Thread.Sleep(1000);
