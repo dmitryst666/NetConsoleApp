@@ -44,18 +44,43 @@ namespace NetConsoleApp
         {
             Console.WriteLine("Thread no {0}", Environment.CurrentManagedThreadId);
             HttpListenerRequest request = context.Request;
-            string path = System.Net.WebUtility.UrlDecode(request.RawUrl);
-            Console.WriteLine("Request: {0}, url: {1}", request.HttpMethod, path);
+            //  string path = System.Net.WebUtility.UrlDecode(request.RawUrl);
+            string text;
+            using (var reader = new StreamReader(request.InputStream,
+                                                 request.ContentEncoding))
+            {
+                text = reader.ReadToEnd();
+            }
+           // Console.WriteLine("Request: {0}", text);
+            //using System.Web and Add a Reference to System.Web
+            Dictionary<string, string> postParams = new Dictionary<string, string>();
+            string[] rawParams = text.Split('&');
+            foreach (string param in rawParams)
+            {
+                string[] kvPair = param.Split('=');
+                string key = kvPair[0];
+                string value = System.Net.WebUtility.UrlDecode(kvPair[1]);
+                postParams.Add(key, value);
+            }
+
+            //Usage
+          //  Console.WriteLine("Hello " + postParams["textparam"]);
+
+
             System.Threading.Thread.Sleep(1000);
             HttpListenerResponse response = context.Response;
             
             using (Stream stream = response.OutputStream) {
                     response.StatusCode = (int)HttpStatusCode.OK;
-                response.AddHeader(HttpResponseHeader.ContentType.ToString(), "Content-Type: text/html; charset=utf-8");
-                string responseString = "<HTML><BODY>";
+                ////Content-Type: text/html; charset=UTF-8
+                response.AddHeader(HttpResponseHeader.ContentType.ToString(), "text/html; charset=utf-8");
+                string responseString = "<!DOCTYPE html><HTML lang=\"ru\"><HEAD><meta http-equiv=Content-Type content=\"text/html; charset = UTF-8\" /></HEAD><BODY>";
                 responseString += "Test <br />";
-                responseString += path;
-                responseString += "</BODY></HTML>";
+                
+                responseString += "<form action=\"\\\" method=\"POST\" name=\"test\">";
+                responseString += "<input type=\"text\" name=\"textparam\" value=\"last entered: " + postParams["textparam"] + "\" />";
+                responseString += "<input type=\"submit\" value=\"Send\">";
+                responseString += "</form></BODY></HTML>";
                     byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                     // Get a response stream and write the response to it.
                     response.ContentLength64 = buffer.Length;
