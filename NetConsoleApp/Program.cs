@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.WebSockets;
+using System.Web.Script.Serialization;
 
 /// <summary>
 ///    http://brain-sharper.blogspot.com/2012/03/httplistener.html
@@ -20,7 +22,7 @@ namespace NetConsoleApp
 
         public static void Main()
         {
-            Listener.Prefixes.Add("http://localhost:8088/");
+            Listener.Prefixes.Add("http://192.168.1.168:8088/");
             Listener.Start();
             Listen();
             Console.WriteLine("Listening...");
@@ -51,36 +53,64 @@ namespace NetConsoleApp
             {
                 text = reader.ReadToEnd();
             }
-           // Console.WriteLine("Request: {0}", text);
+            // Console.WriteLine("Request: {0}", text);
             //using System.Web and Add a Reference to System.Web
-            Dictionary<string, string> postParams = new Dictionary<string, string>();
-            string[] rawParams = text.Split('&');
-            foreach (string param in rawParams)
+
+            if (text.Length > 2)
             {
-                string[] kvPair = param.Split('=');
-                string key = kvPair[0];
-                string value = System.Net.WebUtility.UrlDecode(kvPair[1]);
-                postParams.Add(key, value);
+                Dictionary<string, string> postParams = new Dictionary<string, string>();
+                string[] rawParams = text.Split('&');
+                foreach (string param in rawParams)
+                {
+                    string[] kvPair = param.Split('=');
+                    string key = kvPair[0];
+                    string value = System.Net.WebUtility.UrlDecode(kvPair[1]);
+                    postParams.Add(key, value);
+                }
             }
 
-            //Usage
-          //  Console.WriteLine("Hello " + postParams["textparam"]);
+           // System.Threading.Thread.Sleep(1000);
 
-
-            System.Threading.Thread.Sleep(1000);
             HttpListenerResponse response = context.Response;
+
             
+
+            ArrayList tt = new ArrayList();
+
+            for (int i=0; i < 10; i++ )
+            {
+
+                testObject obj = new testObject();
+                obj.name = "Test Object No. " + i;
+                obj.account = "141000000" + i;
+                tt.Add(obj);
+            }
+            
+            
+
             using (Stream stream = response.OutputStream) {
+
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                string json = serializer.Serialize(tt) ;
+
                     response.StatusCode = (int)HttpStatusCode.OK;
                 ////Content-Type: text/html; charset=UTF-8
                 response.AddHeader(HttpResponseHeader.ContentType.ToString(), "text/html; charset=utf-8");
-                string responseString = "<!DOCTYPE html><HTML lang=\"ru\"><HEAD><meta http-equiv=Content-Type content=\"text/html; charset = UTF-8\" /></HEAD><BODY>";
-                responseString += "Test <br />";
+                string responseString = "<!DOCTYPE html><HTML lang=\"ru\"><HEAD><script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>";
+                responseString += "<meta http-equiv=Content-Type content=\"text/html; charset = UTF-8\" /></HEAD><BODY>";
+                responseString += "<div id=\"accz\"></div> <div id=\"namez\"></div>";
+                responseString += "Input form <br />";
                 
                 responseString += "<form action=\"\\\" method=\"POST\" name=\"test\">";
-                responseString += "<input type=\"text\" name=\"textparam\" value=\"last entered: " + postParams["textparam"] + "\" />";
+                responseString += "<input type=\"text\" name=\"textparam\" value=\"\" />";
                 responseString += "<input type=\"submit\" value=\"Send\">";
-                responseString += "</form></BODY></HTML>";
+                responseString += "</form>";
+             //   responseString += json;
+                responseString += "<script>";
+                responseString += @"var obj = jQuery.parseJSON( '" + json + "' ); jQuery.each( obj, function( i, val ) {  $(\"#accz\").append(\"<br /> - \" + val[\"account\"]);  $(\"#namez\").append(\"<br /> - \" + val[\"name\"]);   }); ";
+                ///  $("#accz").append("<br /><b>AAAAAA</b>");
+                responseString += "</script>";
+                responseString +="</BODY></HTML>";
                     byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                     // Get a response stream and write the response to it.
                     response.ContentLength64 = buffer.Length;
@@ -92,6 +122,11 @@ namespace NetConsoleApp
             Console.WriteLine("Response");
         }
 
+        class testObject
+        {
+            public string name { get; set; }
+            public string account { get; set; }
+        } 
        
 
     }
