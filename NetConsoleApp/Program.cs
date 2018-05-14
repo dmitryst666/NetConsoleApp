@@ -75,30 +75,43 @@ namespace NetConsoleApp
 
             
 
-            ArrayList tt = new ArrayList();
+            //ArrayList tt = new ArrayList();
 
-            for (int i=0; i < 10; i++ )
+            //for (int i=0; i < 10; i++ )
+            //{
+
+            //    testObject obj = new testObject();
+            //    obj.name = "Test Object No. " + i;
+            //    obj.account = "141000000" + i;
+            //    tt.Add(obj);
+            //}
+
+
+            ArrayList rr = new ArrayList();
+
+            for (int j = 0; j < 10; j++)
             {
-
-                testObject obj = new testObject();
-                obj.name = "Test Object No. " + i;
-                obj.account = "141000000" + i;
-                tt.Add(obj);
+                ClientData cld = new ClientData();
+                cld.name = String.Format("Client No. {0}", j);
+                cld.account = String.Format("141000000{0}", j);
+                cld.address = String.Format("Address: 1st street #{0}", j);
+                rr.Add(cld);
             }
-            
+
+
             
 
             using (Stream stream = response.OutputStream) {
 
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
-                string json = serializer.Serialize(tt) ;
+                string json = serializer.Serialize(rr) ;
 
                     response.StatusCode = (int)HttpStatusCode.OK;
                 ////Content-Type: text/html; charset=UTF-8
                 response.AddHeader(HttpResponseHeader.ContentType.ToString(), "text/html; charset=utf-8");
                 string responseString = "<!DOCTYPE html><HTML lang=\"ru\"><HEAD><script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>";
                 responseString += "<meta http-equiv=Content-Type content=\"text/html; charset = UTF-8\" /></HEAD><BODY>";
-                responseString += "<div id=\"accz\"></div> <div id=\"namez\"></div>";
+                responseString += "<div id=\"accz\"></div> <div id=\"namez\"></div> <div id=\"addrz\"></div>";
                 responseString += "Input form <br />";
                 
                 responseString += "<form action=\"\\\" method=\"POST\" name=\"test\">";
@@ -107,7 +120,8 @@ namespace NetConsoleApp
                 responseString += "</form>";
              //   responseString += json;
                 responseString += "<script>";
-                responseString += @"var obj = jQuery.parseJSON( '" + json + "' ); jQuery.each( obj, function( i, val ) {  $(\"#accz\").append(\"<br /> - \" + val[\"account\"]);  $(\"#namez\").append(\"<br /> - \" + val[\"name\"]);   }); ";
+                responseString += @"var obj = jQuery.parseJSON( '" + json + "' ); jQuery.each( obj, function( i, val ) {" +
+                    "  $(\"#accz\").append(\"<br /> - \" + val[\"account\"]);  $(\"#namez\").append(\"<br /> - \" + val[\"name\"]);   $(\"#addrz\").append(\"<br /> - \" + val[\"address\"]); }); ";
                 ///  $("#accz").append("<br /><b>AAAAAA</b>");
                 responseString += "</script>";
                 responseString +="</BODY></HTML>";
@@ -129,6 +143,13 @@ namespace NetConsoleApp
         } 
        
 
+    }
+
+    public class ClientData
+    {
+        public string name { get; set; }
+        public string account { get; set; }
+        public string address { get; set; }
     }
 
 }
